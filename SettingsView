@@ -1,0 +1,22 @@
+import SwiftUI
+
+struct SettingsView: View {
+    @Binding var settings: AppSettings
+
+    var body: some View {
+        Form {
+            Section(header: Text("Кольори")) {
+                ColorPicker("Колір фону", selection: $settings.backgroundColor)
+                ColorPicker("Колір шрифтів", selection: $settings.fontColor)
+            }
+            
+            Section(header: Text("Розмір шрифтів")) {
+                Slider(value: $settings.fontSize, in: 12...24, step: 1) {
+                    Text("Розмір шрифтів")
+                }
+                Text("Розмір: \(Int(settings.fontSize))")
+            }
+        }
+        .navigationTitle("Налаштування")
+    }
+}
