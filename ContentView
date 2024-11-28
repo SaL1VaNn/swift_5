@@ -1,0 +1,101 @@
+import SwiftUI
+
+struct ContentView: View {
+    @StateObject var viewModel = RecipeViewModel()
+    @State private var newRecipeTitle = ""
+    @State private var newRecipeIngredients = ""
+    @State private var newRecipeInstruction = ""
+    @State private var newRecipeCategory = ""
+    @State private var editingRecipe: Recipe?
+    @State private var showingSettings = false
+
+    var body: some View {
+        NavigationView {
+            VStack {
+                Picker("Категорія", selection: $viewModel.selectedCategory) {
+                    Text("Усі").tag("")
+                    Text("Супи").tag("Супи")
+                    Text("Салати").tag("Салати")
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding()
+
+                List {
+                    ForEach(viewModel.filteredRecipes) { recipe in
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(recipe.title)
+                                    .font(.headline)
+                                    .foregroundColor(Color(viewModel.settings.fontColor))
+                                Text(recipe.ingridients)
+                                    .font(.subheadline)
+                                    .foregroundColor(Color(viewModel.settings.fontColor))
+                            }
+                            Spacer()
+                            Button(action: {
+                                newRecipeTitle = recipe.title
+                                newRecipeIngredients = recipe.ingridients
+                                newRecipeInstruction = recipe.instructions
+                                newRecipeCategory = recipe.category
+                                editingRecipe = recipe
+                            }) {
+                                Text("Редагувати")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                    }
+                    .onDelete(perform: deleteRecipe)
+                }
+
+                Form {
+                    TextField("Назва", text: $newRecipeTitle)
+                    TextField("Інгредієнти", text: $newRecipeIngredients)
+                    TextField("Процес Приготування", text: $newRecipeInstruction)
+                    TextField("Категорія", text: $newRecipeCategory)
+
+                    Button("Додати рецепт") {
+                        if let editingRecipe = editingRecipe {
+                            viewModel.upgradeRecipe(recipe: editingRecipe,
+                                                    newTitle: newRecipeTitle,
+                                                    newIngredients: newRecipeIngredients,
+                                                    newInstruction: newRecipeInstruction,
+                                                    newCategory: newRecipeCategory)
+                        } else {
+                            viewModel.addRecipe(title: newRecipeTitle, ingredients: newRecipeIngredients, instructions: newRecipeInstruction, category: newRecipeCategory)
+                        }
+                        clearForm()
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("Рецепти")
+            .toolbar {
+                Button("Налаштування") {
+                    showingSettings = true
+                }
+            }
+            .sheet(isPresented: $showingSettings) {
+                SettingsView(settings: $viewModel.settings)
+            }
+        }
+        .background(Color(viewModel.settings.backgroundColor))
+        .onAppear {
+            viewModel.loadRecipes()
+            viewModel.loadSettings()
+        }
+    }
+
+    private func deleteRecipe(at offsets: IndexSet) {
+        for index in offsets {
+            viewModel.deleteRecipe(recipe: viewModel.recipes[index])
+        }
+    }
+
+    private func clearForm() {
+        newRecipeTitle = ""
+        newRecipeIngredients = ""
+        newRecipeInstruction = ""
+        newRecipeCategory = ""
+        editingRecipe = nil
+    }
+}
