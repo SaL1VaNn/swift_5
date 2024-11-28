@@ -1,0 +1,26 @@
+//
+//  Recipe.swift
+//  lab3
+//
+//  Created by IPZ-31 on 08.10.2024.
+//
+
+import Foundation
+
+struct Recipe: Identifiable {
+    static private var objCount = 0
+    private (set) var id: Int
+    var title: String
+    var ingridients: String
+    var instructions: String
+    var category: String
+    
+    init(title: String, ingridients: String, instructions: String, category: String) {
+        self.id = Recipe.objCount
+        Recipe.objCount += 1
+        self.title = title
+        self.ingridients = ingridients
+        self.instructions = instructions
+        self.category = category
+    }
+}
