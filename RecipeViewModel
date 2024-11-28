@@ -1,0 +1,79 @@
+import Foundation
+import SwiftUI
+
+class RecipeViewModel: ObservableObject {
+    @Published var recipes: [Recipe] = []
+    @Published var selectedCategory: String = ""
+    @Published var settings = AppSettings()
+
+    // Додати рецепт
+    func addRecipe(title: String, ingredients: String, instructions: String, category: String) {
+        let newRecipe = Recipe(title: title, ingridients: ingredients, instructions: instructions, category: category)
+        recipes.append(newRecipe)
+        saveRecipes()
+    }
+
+    // Редагувати рецепт
+    func upgradeRecipe(recipe: Recipe, newTitle: String, newIngredients: String, newInstruction: String, newCategory: String) {
+        if let index = recipes.firstIndex(where: { $0.id == recipe.id }) {
+            recipes[index].title = newTitle
+            recipes[index].ingridients = newIngredients
+            recipes[index].instructions = newInstruction
+            recipes[index].category = newCategory
+            saveRecipes()
+        }
+    }
+
+    // Видалити рецепт
+    func deleteRecipe(recipe: Recipe) {
+        recipes.removeAll { $0.id == recipe.id }
+        saveRecipes()
+    }
+
+    // Фільтрація за категоріями
+    var filteredRecipes: [Recipe] {
+        if selectedCategory.isEmpty {
+            return recipes
+        } else {
+            return recipes.filter { $0.category == selectedCategory }
+        }
+    }
+
+    // Зберегти рецепти у файл
+    func saveRecipes() {
+        let encoder = JSONEncoder()
+        if let data = try? encoder.encode(recipes) {
+            let url = getDocumentsDirectory().appendingPathComponent("recipes.json")
+            try? data.write(to: url)
+        }
+    }
+
+    // Завантажити рецепти з файлу
+    func loadRecipes() {
+        let url = getDocumentsDirectory().appendingPathComponent("recipes.json")
+        if let data = try? Data(contentsOf: url),
+           let loadedRecipes = try? JSONDecoder().decode([Recipe].self, from: data) {
+            recipes = loadedRecipes
+        }
+    }
+
+    // Зберегти налаштування
+    func saveSettings() {
+        let encoder = JSONEncoder()
+        if let data = try? encoder.encode(settings) {
+            UserDefaults.standard.set(data, forKey: "AppSettings")
+        }
+    }
+
+    // Завантажити налаштування
+    func loadSettings() {
+        if let data = UserDefaults.standard.data(forKey: "AppSettings"),
+           let loadedSettings = try? JSONDecoder().decode(AppSettings.self, from: data) {
+            settings = loadedSettings
+        }
+    }
+
+    private func getDocumentsDirectory() -> URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    }
+}
