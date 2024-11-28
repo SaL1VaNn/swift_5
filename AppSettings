@@ -1,0 +1,7 @@
+import SwiftUI
+
+struct AppSettings: Codable {
+    var backgroundColor: Color = .white
+    var fontColor: Color = .black
+    var fontSize: CGFloat = 16.0
+}
